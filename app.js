@@ -41,18 +41,16 @@ xmlhttp.onreadystatechange = function() {
     // Add the GeoJSON layer to the map
     geoJsonLayer.addTo(map);
 
-    // Add an event listener for when the user drops a pin
-    map.on("click", function(e) {
-      // Set the waypoint to the dropped pin location
-      control.setWaypoints([
-        L.latLng(e.latlng.lat, e.latlng.lng)
-      ]);
-         
-         
+  // Add an event listener for when the user drops a pin
+map.on("click", function(e) {
+  // Set the waypoint to the dropped pin location
+  control.setWaypoints([
+    L.latLng(e.latlng.lat, e.latlng.lng)
+  ]);
 
   // Filter the GeoJSON layer to include only the amenities within the 10-minute walking distance
   var amenities = geoJsonLayer.toGeoJSON().features.filter(function(feature) {
-    var distanceToAmenity = L.latLng(feature.geometry.coordinates[1], feature.geometry.coordinates[0]).distanceTo(e.waypoints[0].latLng);
+    var distanceToAmenity = L.latLng(feature.geometry.coordinates[1], feature.geometry.coordinates[0]).distanceTo(e.latlng);
     return distanceToAmenity <= 1000 * 10; // meters
   });
 
@@ -80,6 +78,7 @@ xmlhttp.onreadystatechange = function() {
       return marker;
     }
   });
+
   // Add the filtered GeoJSON layer to the map and remove the previous layer
   map.removeLayer(geoJsonLayer);
   filteredLayer.addTo(map);
