@@ -10,6 +10,13 @@ var tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 });
 tileLayer.addTo(map);
 
+//event listener to capture click
+map.on('click', function(e) {
+  var marker = L.marker(e.latlng).addTo(map);
+  marker.bindPopup('Lat: ' + e.latlng.lat + '<br>Lng: ' + e.latlng.lng).openPopup();
+});
+
+
 // Make an HTTP request to the Overpass API
 var xmlhttp = new XMLHttpRequest();
 var url = "https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node['amenity'='pharmacy']({{bbox}});node['amenity'='library']({{bbox}});node['amenity'='post_office']({{bbox}});node['amenity'='bus_stop']({{bbox}});node['shop'='retail']({{bbox}});node['healthcare'='doctor']({{bbox}}););out body;>;out skel qt;";
