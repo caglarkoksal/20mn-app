@@ -5,10 +5,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
-
-  <!-- Leaflet Routing Machine plugin CSS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css" integrity="sha512-dCUUj87Lc1jXU8W86UZv6QCEOF6g4qf8sW6ldxHvq3lUMoQKTnElzhZvfl8KjGGa1pRwRWWo+IjjjKsbJ7VYEA==" crossorigin="anonymous" />
-
 </head>
 <body>
   <div id="map" style="height: 100vh;"></div>
@@ -23,11 +19,47 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js" integrity="sha512-YllURwLvN90pSTxLe0OFiokMZS9ln0jBdUZBcU8W6q3qf4zj2iMvH+m8WJrxT6TjK/GNOh55ZP8U6W3q4BwNIQ==" crossorigin="anonymous"></script>
-  <script src="app.js"></script>
   <script>
-    fetchData(); // Fetch data on page load
-    document.getElementById('service-selection').addEventListener('change', fetchData); // Update data on service selection change
-  </script>
-</body>
-</html>
+    var map = L.map("map", {
+      center: [51.5074, -0.1278], // London, UK (default center)
+      zoom: 13 // default zoom level
+    });
+
+    var tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "Map data © <a href='https://www.openstreetmap.org/'>OpenStreetMap</a> contributors"
+    });
+    tileLayer.addTo(map);
+
+    var geoJsonLayer;
+
+    function fetchData() {
+      if (geoJsonLayer) {
+        map.removeLayer(geoJsonLayer);
+      }
+      
+      var bbox = map.getBounds().toBBoxString();
+      var url = "https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node['amenity'='pharmacy'](" + bbox + ");node['amenity'='library'](" + bbox + ");node['amenity'='post_office'](" + bbox + ");node['amenity'='bus_stop'](" + bbox + ");node['shop'='retail'](" + bbox + ");node['healthcare'='doctor'](" + bbox + "););out body;>;out skel qt;";
+      var xmlhttp = new XMLHttpRequest();
+
+    xmlhttp.onreadystatechange = () => {
+  if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
+    var data = JSON.parse(xmlhttp.responseText);
+
+    geoJsonLayer = L.geoJSON(data, {
+      pointToLayer: (feature, latlng) => {
+        var iconUrl = "icons/" + feature.properties.amenity + ".png";
+        var iconSize = [32, 32];
+        var iconAnchor = [16, 16];
+        var icon = L.icon({
+          iconUrl: iconUrl,
+          iconSize: iconSize,
+          iconAnchor: iconAnchor
+        });
+        var marker = L.marker(latlng, { icon: icon });
+        marker.bindPopup(feature.properties.name);
+        return marker;
+      }
+    });
+    geoJsonLayer.addTo(map);
+  }
+};
